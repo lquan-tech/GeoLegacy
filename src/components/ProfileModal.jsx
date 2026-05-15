@@ -4,13 +4,11 @@ import {
   CalendarClock,
   Chrome,
   ExternalLink,
-  Facebook,
   Globe2,
   Link2,
   Link2Off,
   Loader2,
   Mail,
-  MessageCircle,
   ShieldCheck,
   UserRound,
   X,
@@ -37,22 +35,8 @@ const securityProviders = [
     id: "google",
     label: "Google",
     Icon: Chrome,
-    enabled: import.meta.env.VITE_ENABLE_GOOGLE_LINK === "true",
+    enabled: true,
     accentClass: "border-teal-200 bg-teal-50 text-teal-700",
-  },
-  {
-    id: "facebook",
-    label: "Facebook",
-    Icon: Facebook,
-    enabled: import.meta.env.VITE_ENABLE_FACEBOOK_LINK === "true",
-    accentClass: "border-blue-200 bg-blue-50 text-blue-700",
-  },
-  {
-    id: "discord",
-    label: "Discord",
-    Icon: MessageCircle,
-    enabled: import.meta.env.VITE_ENABLE_DISCORD_LINK === "true",
-    accentClass: "border-violet-200 bg-violet-50 text-violet-700",
   },
 ];
 
@@ -224,7 +208,14 @@ export default function ProfileModal() {
       setIdentityError("");
       await linkAccountProvider(providerId);
     } catch (error) {
-      setIdentityError(error.message || `Could not link ${providerId}.`);
+      const message = error.message || `Could not link ${providerId}.`;
+      const needsManualLinking = message.toLowerCase().includes("manual linking");
+
+      setIdentityError(
+        needsManualLinking
+          ? "Enable Manual Linking in Supabase Auth settings, then try linking Google again."
+          : message,
+      );
       setIdentityAction("");
     }
   };

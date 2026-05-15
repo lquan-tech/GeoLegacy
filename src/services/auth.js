@@ -28,15 +28,28 @@ function normalizeWebsiteUrl(value) {
 export function getAuthRedirectUrl() {
   const configuredUrl = import.meta.env.VITE_AUTH_REDIRECT_URL;
 
-  if (configuredUrl) {
+  if (typeof window === "undefined") {
     return configuredUrl;
   }
 
-  if (typeof window === "undefined") {
-    return undefined;
+  const currentUrl = `${window.location.origin}${window.location.pathname}`;
+
+  if (!configuredUrl) {
+    return currentUrl;
   }
 
-  return `${window.location.origin}${window.location.pathname}`;
+  const isConfiguredLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(
+    configuredUrl,
+  );
+  const isCurrentLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(
+    window.location.origin,
+  );
+
+  if (isConfiguredLocalhost && !isCurrentLocalhost) {
+    return currentUrl;
+  }
+
+  return configuredUrl;
 }
 
 export function cleanAuthCallbackUrl() {

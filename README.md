@@ -126,9 +126,6 @@ copy .env.example .env
 VITE_SUPABASE_URL=https://your-project-id.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key-here
 VITE_AUTH_REDIRECT_URL=http://localhost:5173/
-VITE_ENABLE_GOOGLE_LINK=true
-VITE_ENABLE_FACEBOOK_LINK=false
-VITE_ENABLE_DISCORD_LINK=false
 ```
 
 > 💡 Lấy `SUPABASE_URL` và `SUPABASE_ANON_KEY` tại: Dashboard Supabase → **Settings** → **API**
@@ -197,9 +194,6 @@ File build xuất ra thư mục `dist/`. Có thể deploy lên:
 | `VITE_SUPABASE_URL` | URL project Supabase | ✅ |
 | `VITE_SUPABASE_ANON_KEY` | Anon key (public) của Supabase | ✅ |
 | `VITE_AUTH_REDIRECT_URL` | URL redirect sau khi đăng nhập OAuth | ✅ |
-| `VITE_ENABLE_GOOGLE_LINK` | Hiện nút đăng nhập Google (`true`/`false`) | ❌ |
-| `VITE_ENABLE_FACEBOOK_LINK` | Hiện nút đăng nhập Facebook | ❌ |
-| `VITE_ENABLE_DISCORD_LINK` | Hiện nút đăng nhập Discord | ❌ |
 
 > ⚠️ **Không bao giờ commit file `.env` lên GitHub!** File này đã được `.gitignore` bảo vệ.
 

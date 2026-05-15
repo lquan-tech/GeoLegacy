@@ -127,8 +127,8 @@ export default function AuthModal() {
               )}
 
               <div className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs leading-5 text-sky-800">
-                Google, Facebook, and Discord are linked after sign-in from Profile Center.
-                Email/password stays as the primary account credential.
+                Google can be linked after sign-in from Profile Center. Email/password stays
+                as the primary account credential.
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-3">

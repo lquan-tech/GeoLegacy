@@ -8,6 +8,29 @@ import {
 } from "../services/auth";
 import { useChronoStore } from "../store/useStore";
 
+function describeGoogleLinkFailure(message) {
+  const rawMessage = message || "Google did not finish linking.";
+  const normalizedMessage = rawMessage.toLowerCase();
+
+  if (normalizedMessage.includes("unable to exchange external code")) {
+    return `Google OAuth rejected the callback. Recheck the Google Client ID/Secret and redirect URI in Supabase. Raw: ${rawMessage}`;
+  }
+
+  if (
+    normalizedMessage.includes("identity_already") ||
+    normalizedMessage.includes("already linked") ||
+    normalizedMessage.includes("already registered")
+  ) {
+    return `This Google account is already attached to another GeoLegacy user. Remove that duplicate Auth user first. Raw: ${rawMessage}`;
+  }
+
+  if (normalizedMessage.includes("manual linking")) {
+    return "Enable Manual Linking in Supabase Auth settings, then try linking Google again.";
+  }
+
+  return rawMessage;
+}
+
 export default function AuthProvider({ children }) {
   const setAuthState = useChronoStore((state) => state.setAuthState);
   const closeAuthModal = useChronoStore((state) => state.closeAuthModal);
@@ -89,7 +112,12 @@ export default function AuthProvider({ children }) {
       const { data } = await supabase.auth.getSession();
 
       if (data?.session) {
-        await applySession(data.session, "SIGNED_IN");
+        await applySession(data.session);
+        showToast({
+          title: "Google link failed",
+          description: describeGoogleLinkFailure(error.message),
+          variant: "error",
+        });
         return;
       }
 

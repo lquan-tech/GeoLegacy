@@ -17,6 +17,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   getLinkedIdentities,
   linkAccountProvider,
+  linkGoogleAccountWithIdToken,
   unlinkAccountIdentity,
   updateUserProfile,
 } from "../services/auth";
@@ -85,6 +86,37 @@ function formatLinkedEmail(email) {
   const prefix = name.length <= 6 ? name : `${name.slice(0, 6)}...`;
 
   return `${prefix}@${domain}`;
+}
+
+function describeIdentityLinkError(providerId, message) {
+  const rawMessage = message || `Could not link ${providerId}.`;
+  const normalizedMessage = rawMessage.toLowerCase();
+
+  if (normalizedMessage.includes("manual linking")) {
+    return "Enable Manual Linking in Supabase Auth settings, then try linking Google again.";
+  }
+
+  if (normalizedMessage.includes("unable to exchange external code")) {
+    return "Google OAuth callback is misconfigured. Recheck the Google Client Secret and Supabase callback URL, then try again.";
+  }
+
+  if (
+    normalizedMessage.includes("identity_already") ||
+    normalizedMessage.includes("already linked") ||
+    normalizedMessage.includes("already registered")
+  ) {
+    return "This Google account is already attached to another GeoLegacy user. Remove that duplicate Auth user first.";
+  }
+
+  if (
+    normalizedMessage.includes("origin") ||
+    normalizedMessage.includes("not_allowed") ||
+    normalizedMessage.includes("could not open")
+  ) {
+    return "Google popup could not open. Add https://ge0legacy.vercel.app to Authorized JavaScript origins in Google Cloud.";
+  }
+
+  return rawMessage;
 }
 
 export default function ProfileModal() {
@@ -228,16 +260,26 @@ export default function ProfileModal() {
     try {
       setIdentityAction(providerId);
       setIdentityError("");
+
+      if (providerId === "google") {
+        await linkGoogleAccountWithIdToken();
+        const identities = await getLinkedIdentities();
+        const googleIdentity = identities.find((identity) => identity.provider === "google");
+        const linkedEmail = formatLinkedEmail(getIdentityEmail(googleIdentity));
+
+        setLinkedIdentities(identities);
+        showToast({
+          title: "Google linked",
+          description: `Linked to ${linkedEmail}.`,
+          variant: "success",
+        });
+        return;
+      }
+
       await linkAccountProvider(providerId);
     } catch (error) {
-      const message = error.message || `Could not link ${providerId}.`;
-      const needsManualLinking = message.toLowerCase().includes("manual linking");
-
-      setIdentityError(
-        needsManualLinking
-          ? "Enable Manual Linking in Supabase Auth settings, then try linking Google again."
-          : message,
-      );
+      setIdentityError(describeIdentityLinkError(providerId, error.message));
+    } finally {
       setIdentityAction("");
     }
   };

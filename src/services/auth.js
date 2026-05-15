@@ -1,5 +1,7 @@
 import { supabase } from "../lib/supabaseClient";
 
+const GOOGLE_IDENTITY_SCRIPT_SRC = "https://accounts.google.com/gsi/client";
+
 function sanitizeUsername(value) {
   const normalized = (value || "explorer")
     .toString()
@@ -60,6 +62,8 @@ export function getOAuthCallbackError() {
 
   const url = new URL(window.location.href);
   const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  const errorCode =
+    url.searchParams.get("error_code") || hashParams.get("error_code");
   const errorDescription =
     url.searchParams.get("error_description") || hashParams.get("error_description");
   const error = url.searchParams.get("error") || hashParams.get("error");
@@ -68,7 +72,8 @@ export function getOAuthCallbackError() {
     return null;
   }
 
-  return errorDescription || error;
+  const message = errorDescription || error;
+  return errorCode ? `${message} (${errorCode})` : message;
 }
 
 export async function completeOAuthCallback() {
@@ -293,6 +298,158 @@ export async function linkAccountProvider(provider) {
     options: {
       redirectTo: getAuthRedirectUrl(),
     },
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+function loadGoogleIdentityScript() {
+  if (typeof window === "undefined") {
+    return Promise.reject(new Error("Google linking only works in the browser."));
+  }
+
+  if (window.google?.accounts?.id) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve, reject) => {
+    const existingScript = document.querySelector(
+      `script[src="${GOOGLE_IDENTITY_SCRIPT_SRC}"]`,
+    );
+
+    if (existingScript) {
+      existingScript.addEventListener("load", resolve, { once: true });
+      existingScript.addEventListener(
+        "error",
+        () => reject(new Error("Could not load Google Identity Services.")),
+        { once: true },
+      );
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = GOOGLE_IDENTITY_SCRIPT_SRC;
+    script.async = true;
+    script.defer = true;
+    script.onload = resolve;
+    script.onerror = () =>
+      reject(new Error("Could not load Google Identity Services."));
+    document.head.appendChild(script);
+  });
+}
+
+async function getGoogleOAuthClientId() {
+  if (import.meta.env.VITE_GOOGLE_CLIENT_ID) {
+    return import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  }
+
+  const { data, error } = await supabase.auth.linkIdentity({
+    provider: "google",
+    options: {
+      redirectTo: getAuthRedirectUrl(),
+      skipBrowserRedirect: true,
+    },
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  const providerUrl = data?.url;
+
+  if (!providerUrl) {
+    throw new Error("Supabase did not return a Google provider URL.");
+  }
+
+  const clientId = new URL(providerUrl).searchParams.get("client_id");
+
+  if (!clientId) {
+    throw new Error("Could not read the Google Client ID from Supabase.");
+  }
+
+  return clientId;
+}
+
+function getGoogleIdentityCredential(clientId) {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const timeoutId = window.setTimeout(() => {
+      if (!settled) {
+        settled = true;
+        reject(new Error("Google linking timed out. Try again."));
+      }
+    }, 60000);
+
+    const finish = (callback) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      window.clearTimeout(timeoutId);
+      callback();
+    };
+
+    window.google.accounts.id.cancel();
+    window.google.accounts.id.initialize({
+      client_id: clientId,
+      callback: (response) => {
+        finish(() => {
+          if (response?.credential) {
+            resolve(response.credential);
+          } else {
+            reject(new Error("Google did not return an identity token."));
+          }
+        });
+      },
+      auto_select: false,
+      cancel_on_tap_outside: true,
+      context: "use",
+      ux_mode: "popup",
+      use_fedcm_for_prompt: true,
+    });
+
+    window.google.accounts.id.prompt((notification) => {
+      if (settled) {
+        return;
+      }
+
+      if (notification.isNotDisplayed?.()) {
+        const reason = notification.getNotDisplayedReason?.() || "unknown";
+        finish(() =>
+          reject(new Error(`Google prompt could not open: ${reason}.`)),
+        );
+        return;
+      }
+
+      if (notification.isSkippedMoment?.()) {
+        const reason = notification.getSkippedReason?.() || "unknown";
+        finish(() =>
+          reject(new Error(`Google prompt was skipped: ${reason}.`)),
+        );
+        return;
+      }
+
+      if (notification.isDismissedMoment?.()) {
+        const reason = notification.getDismissedReason?.() || "closed";
+        finish(() =>
+          reject(new Error(`Google prompt was dismissed: ${reason}.`)),
+        );
+      }
+    });
+  });
+}
+
+export async function linkGoogleAccountWithIdToken() {
+  const clientId = await getGoogleOAuthClientId();
+  await loadGoogleIdentityScript();
+  const credential = await getGoogleIdentityCredential(clientId);
+  const { data, error } = await supabase.auth.linkIdentity({
+    provider: "google",
+    token: credential,
   });
 
   if (error) {

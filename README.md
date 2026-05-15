@@ -1,227 +1,737 @@
-# 🌍 GeoLegacy
+# GeoLegacy
 
-> **Khám phá lịch sử nhân loại trên quả địa cầu 3D tương tác**
+GeoLegacy là một ứng dụng web giúp khám phá các địa danh lịch sử trên bản đồ quả địa cầu 3D. Người dùng có thể xem thông tin từng địa danh, tìm kiếm theo thời kỳ hoặc khu vực, lưu địa điểm yêu thích, bình luận, và đóng góp địa danh mới cho cộng đồng.
 
-GeoLegacy là một ứng dụng web cho phép người dùng khám phá các địa danh lịch sử của thế giới thông qua một quả địa cầu 3D sống động. Người dùng có thể tìm kiếm, lọc theo thời đại, xem chi tiết từng địa danh, đăng nhập để đóng góp địa điểm mới, đánh dấu bookmark, và chia sẻ vị trí qua link.
+Điểm chính của dự án là dữ liệu không chỉ nằm ở frontend. Ứng dụng có Supabase làm backend, có đăng nhập, phân quyền, lưu landmark vào database, upload ảnh, kiểm duyệt bài gửi mới và khu vực quản trị riêng cho admin.
 
----
+Link demo:
 
-## 📸 Tính năng nổi bật
-
-- 🌐 **Quả địa cầu 3D** — xoay, zoom, và nhấp vào từng điểm lịch sử trực tiếp trên bản đồ
-- 🔍 **Tìm kiếm thông minh** — tìm theo tên, địa điểm, thời đại, mô tả, hoặc tác giả
-- ⏳ **Lọc theo thời đại** — Ancient / Classical / Medieval / Early Modern
-- 📍 **Side Panel chi tiết** — ảnh, mô tả, thời đại, bình luận, chia sẻ link
-- 💬 **Hệ thống bình luận** — thêm "field notes" vào từng địa danh
-- 🔖 **Bookmark** — lưu địa danh yêu thích
-- 🔗 **Chia sẻ permalink** — mỗi địa danh có URL riêng (`?site=id`)
-- 👤 **Đăng nhập / Đăng ký** — xác thực qua Supabase (hỗ trợ Google OAuth)
-- ➕ **Đóng góp địa danh** — người dùng đăng nhập có thể submit địa điểm mới để kiểm duyệt
-- 📱 **Responsive** — hoạt động tốt trên cả desktop lẫn mobile
-
----
-
-## 🛠️ Công nghệ sử dụng
-
-| Công nghệ | Vai trò |
-|---|---|
-| [React 18](https://react.dev/) | Framework UI |
-| [Vite 6](https://vitejs.dev/) | Build tool & Dev server |
-| [Tailwind CSS 4](https://tailwindcss.com/) | Styling |
-| [react-globe.gl](https://github.com/vasturiano/react-globe.gl) | Quả địa cầu 3D (WebGL + Three.js) |
-| [Framer Motion](https://www.framer.com/motion/) | Animation (side panel, modal) |
-| [Zustand](https://zustand-demo.pmnd.rs/) | Quản lý state toàn cục |
-| [Supabase](https://supabase.com/) | Backend: Auth, Database (PostgreSQL), Storage |
-| [Lucide React](https://lucide.dev/) | Icon library |
-
----
-
-## 📁 Cấu trúc thư mục
-
+```text
+https://ge0legacy.vercel.app
 ```
+
+Lưu ý: domain là `ge0legacy` với số `0`, không phải chữ `o`.
+
+## Mục lục
+
+- [Tính năng](#tính-năng)
+- [Công nghệ sử dụng](#công-nghệ-sử-dụng)
+- [Cấu trúc thư mục](#cấu-trúc-thư-mục)
+- [Cài đặt dự án](#cài-đặt-dự-án)
+- [Cấu hình Supabase](#cấu-hình-supabase)
+- [Cấu hình Google Account Linking](#cấu-hình-google-account-linking)
+- [Tạo tài khoản admin](#tạo-tài-khoản-admin)
+- [Luồng hoạt động chính](#luồng-hoạt-động-chính)
+- [Scripts](#scripts)
+- [Database](#database)
+- [Deploy lên Vercel](#deploy-lên-vercel)
+- [Lỗi thường gặp](#lỗi-thường-gặp)
+- [Ghi chú bảo mật](#ghi-chú-bảo-mật)
+
+## Tính năng
+
+### Khám phá địa danh
+
+- Hiển thị các landmark trên quả địa cầu 3D.
+- Click vào từng điểm để xem ảnh, mô tả, khu vực, thời kỳ và người đóng góp.
+- Tìm kiếm theo tên, khu vực, thời kỳ, nội dung mô tả hoặc tác giả.
+- Lọc theo nhóm thời kỳ: Ancient, Classical, Medieval, Early Modern.
+- Chia sẻ link trực tiếp tới từng landmark bằng query `?site=<id>`.
+- Giao diện responsive cho desktop và mobile.
+
+### Tài khoản người dùng
+
+- Đăng ký và đăng nhập bằng email/password qua Supabase Auth.
+- Cập nhật hồ sơ cá nhân: tên hiển thị, ảnh đại diện, bio, khu vực, website.
+- Liên kết tài khoản Google với tài khoản đã tạo sẵn để tăng độ an toàn.
+- Bookmark các landmark yêu thích.
+- Bình luận vào các landmark đã được publish.
+- Gửi landmark mới để chờ admin duyệt.
+
+### Quản trị website
+
+Admin có khu vực riêng trong menu người dùng. Các chức năng chính:
+
+- Xem thống kê tổng quan: số landmark, số bài pending, số user, số comment.
+- Xem toàn bộ landmark, bao gồm cả `pending` và `published`.
+- Approve landmark mới bằng cách chuyển trạng thái sang `published`.
+- Unpublish landmark nếu cần ẩn lại.
+- Chỉnh sửa thông tin landmark: tên, era, region, mô tả, tọa độ, ảnh, trạng thái.
+- Xóa landmark không hợp lệ.
+- Xem danh sách user và đổi role giữa `user` và `admin`.
+- Xem và xóa comment.
+
+### Backend và phân quyền
+
+- Dữ liệu landmark được lưu trong Supabase PostgreSQL.
+- Landmark do user gửi sẽ có trạng thái `pending`.
+- User thường chỉ thấy landmark `published`.
+- Admin có quyền xem và quản lý tất cả landmark.
+- Row Level Security được bật cho các bảng chính.
+- Trigger trong database chặn user thường tự nâng quyền hoặc tự publish bài của mình.
+
+## Công nghệ sử dụng
+
+| Nhóm | Công nghệ |
+| --- | --- |
+| Frontend | React 18, Vite 6 |
+| Styling | Tailwind CSS 4 |
+| 3D Globe | react-globe.gl, Three.js |
+| Animation | Framer Motion |
+| State management | Zustand |
+| Icon | Lucide React |
+| Backend | Supabase Auth, PostgreSQL, Storage |
+| Deploy | Vercel |
+
+## Cấu trúc thư mục
+
+```text
 GeoLegacy/
-├── src/
-│   ├── components/         # Các component UI
-│   │   ├── AppHeader.jsx       # Thanh header (tìm kiếm, bộ lọc, nút thêm địa danh)
-│   │   ├── AppShell.jsx        # Layout bọc ngoài toàn app
-│   │   ├── AuthModal.jsx       # Modal đăng nhập / đăng ký
-│   │   ├── AuthProvider.jsx    # Quản lý session Supabase
-│   │   ├── EraFilter.jsx       # Bộ lọc thời đại (Ancient, Medieval...)
-│   │   ├── GlobeComponent.jsx  # Quả địa cầu 3D chính
-│   │   ├── ProfileModal.jsx    # Modal chỉnh sửa hồ sơ cá nhân
-│   │   ├── SidePanel.jsx       # Panel chi tiết địa danh (bên phải)
-│   │   ├── Toast.jsx           # Thông báo popup (success, error...)
-│   │   ├── Tooltip.jsx         # Tooltip hover
-│   │   ├── UploadModal.jsx     # Modal thêm địa danh mới
-│   │   └── UserMenu.jsx        # Menu người dùng (avatar, logout)
-│   │
-│   ├── data/
-│   │   └── landmarks.js        # Dữ liệu mẫu địa danh ban đầu
-│   │
-│   ├── hooks/
-│   │   ├── useMediaQuery.js    # Hook kiểm tra kích thước màn hình
-│   │   └── useWindowSize.js    # Hook lấy width/height cửa sổ
-│   │
-│   ├── lib/
-│   │   └── supabaseClient.js   # Khởi tạo Supabase client
-│   │
-│   ├── services/
-│   │   ├── auth.js             # Hàm đăng nhập, đăng ký, đăng xuất
-│   │   ├── geocoding.js        # Chuyển đổi tên địa điểm sang tọa độ
-│   │   └── landmarks.js        # CRUD địa danh với Supabase
-│   │
-│   ├── store/
-│   │   └── useStore.js         # Zustand store — quản lý toàn bộ state ứng dụng
-│   │
-│   ├── App.jsx                 # Component gốc, kết nối tất cả
-│   ├── index.css               # CSS global & custom styles
-│   └── main.jsx                # Entry point React
-│
-├── supabase/
-│   ├── schema.sql              # Toàn bộ SQL: bảng, RLS, trigger, storage
-│   └── verify_setup.sql        # Script kiểm tra cài đặt Supabase
-│
-├── .env.example                # Mẫu biến môi trường (copy thành .env)
-├── .gitignore
-├── index.html
-├── package.json
-├── tailwind.config.js
-└── vite.config.js
++-- src/
+|   +-- components/
+|   |   +-- AdminReviewModal.jsx   # Admin Console
+|   |   +-- AppHeader.jsx          # Header, search, add site, user menu
+|   |   +-- AuthModal.jsx          # Dang nhap / dang ky
+|   |   +-- AuthProvider.jsx       # Quan ly session Supabase
+|   |   +-- GlobeComponent.jsx     # Qua dia cau 3D
+|   |   +-- ProfileModal.jsx       # Ho so nguoi dung va link Google
+|   |   +-- SidePanel.jsx          # Chi tiet landmark, comment, bookmark
+|   |   +-- UploadModal.jsx        # Form gui landmark moi
+|   |   +-- UserMenu.jsx           # Menu tai khoan, admin console, logout
+|   +-- data/
+|   |   +-- landmarks.js           # Du lieu fallback/default
+|   +-- hooks/
+|   |   +-- useMediaQuery.js
+|   |   +-- useWindowSize.js
+|   +-- lib/
+|   |   +-- supabaseClient.js      # Khoi tao Supabase client
+|   +-- services/
+|   |   +-- admin.js               # API cho admin
+|   |   +-- auth.js                # Auth, profile, Google linking
+|   |   +-- geocoding.js           # Tim toa do tu dia diem
+|   |   +-- landmarks.js           # API landmark va upload anh
+|   +-- store/
+|   |   +-- useStore.js            # Zustand store
+|   +-- App.jsx
+|   +-- index.css
+|   +-- main.jsx
++-- supabase/
+|   +-- bootstrap_admin.sql        # Tao quyen admin cho mot user
+|   +-- schema.sql                 # Database schema, RLS, seed data, storage
+|   +-- verify_setup.sql           # Script kiem tra setup
++-- .env.example
++-- package.json
++-- tailwind.config.js
++-- vite.config.js
 ```
 
----
-
-## ⚙️ Cài đặt & Chạy local
+## Cài đặt dự án
 
 ### Yêu cầu
-- [Node.js](https://nodejs.org/) phiên bản **18 trở lên**
-- Tài khoản [Supabase](https://supabase.com/) (miễn phí)
 
-### Bước 1 — Clone project
+- Node.js 18 trở lên
+- npm
+- Tài khoản Supabase
+- Tài khoản Google Cloud nếu muốn bật liên kết Google
+
+### Clone repo
 
 ```bash
 git clone https://github.com/lquan-tech/GeoLegacy.git
 cd GeoLegacy
 ```
 
-### Bước 2 — Cài đặt dependencies
+### Cài dependencies
 
 ```bash
 npm install
 ```
 
-### Bước 3 — Cấu hình Supabase
+### Tạo file môi trường
 
-1. Tạo project mới tại [supabase.com](https://supabase.com/)
-2. Vào **SQL Editor** trong dashboard Supabase, chạy toàn bộ nội dung file `supabase/schema.sql`
-3. Copy file `.env.example` thành `.env`:
+Trên Windows:
 
 ```bash
 copy .env.example .env
 ```
 
-4. Điền thông tin vào file `.env`:
+Trên macOS/Linux:
+
+```bash
+cp .env.example .env
+```
+
+Cập nhật `.env`:
 
 ```env
-VITE_SUPABASE_URL=https://your-project-id.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key-here
+VITE_SUPABASE_URL=https://your-project-ref.supabase.co
+VITE_SUPABASE_ANON_KEY=your-supabase-anon-or-publishable-key
 VITE_AUTH_REDIRECT_URL=http://localhost:5173/
 ```
 
-> 💡 Lấy `SUPABASE_URL` và `SUPABASE_ANON_KEY` tại: Dashboard Supabase → **Settings** → **API**
+Trong đó:
 
-### Bước 4 — Chạy dev server
+- `VITE_SUPABASE_URL`: URL project Supabase.
+- `VITE_SUPABASE_ANON_KEY`: anon key hoặc publishable key của Supabase.
+- `VITE_AUTH_REDIRECT_URL`: URL fallback cho auth redirect khi chạy local.
+
+Có thể lấy Supabase URL và key tại:
+
+```text
+Supabase Dashboard > Project Settings > API
+```
+
+### Chạy local
 
 ```bash
 npm run dev
 ```
 
-Mở trình duyệt và truy cập: **http://localhost:5173**
+Mở trình duyệt:
 
----
+```text
+http://localhost:5173
+```
 
-## 🗄️ Cơ sở dữ liệu (Supabase)
+## Cấu hình Supabase
 
-Chạy file `supabase/schema.sql` để tạo toàn bộ cấu trúc:
+### 1. Tạo project Supabase
 
-### Các bảng chính
+Vào Supabase, tạo project mới. Sau khi project sẵn sàng, mở SQL Editor.
 
-| Bảng | Mô tả |
-|---|---|
-| `profiles` | Hồ sơ người dùng (username, display_name, avatar, role) |
-| `landmarks` | Địa danh lịch sử (title, description, lat, lng, era, status) |
-| `comments` | Bình luận của người dùng trên từng địa danh |
-| `bookmarks` | Danh sách địa danh đã bookmark của mỗi user |
+### 2. Chạy schema
 
-### Trạng thái địa danh
+Copy toàn bộ nội dung file dưới đây và chạy trong SQL Editor:
 
-- **`pending`** — vừa được user submit, đang chờ admin kiểm duyệt
-- **`published`** — đã được duyệt, hiển thị công khai trên bản đồ
+```text
+supabase/schema.sql
+```
 
-### Bảo mật (Row Level Security)
+File này sẽ tạo:
 
-Supabase RLS được bật cho tất cả bảng:
-- Ai cũng có thể **xem** địa danh đã published
-- Chỉ người dùng **đã đăng nhập** mới có thể submit địa danh, bình luận, bookmark
-- Người dùng chỉ có thể **sửa/xóa** dữ liệu của chính mình
-- **Admin** có quyền kiểm duyệt và cập nhật mọi địa danh
+- bảng `profiles`
+- bảng `landmarks`
+- bảng `comments`
+- bảng `bookmarks`
+- index tìm kiếm
+- helper function `is_admin`
+- trigger tạo profile sau khi user đăng ký
+- trigger cập nhật `updated_at`
+- trigger chặn user thường tự đổi role
+- trigger chặn user thường tự publish landmark
+- RLS policies
+- seed landmark mẫu
+- bucket `landmark-images`
+- policy upload/read ảnh
 
-### Storage
+### 3. Kiểm tra setup
 
-Bucket `landmark-images` để lưu ảnh địa danh:
-- Dung lượng tối đa: **5MB/ảnh**
-- Định dạng hỗ trợ: `image/jpeg`, `image/png`, `image/webp`
+Sau khi chạy schema, có thể chạy thêm:
 
----
+```text
+supabase/verify_setup.sql
+```
 
-## 🚀 Build production
+Script này giúp kiểm tra nhanh các bảng, trigger, policy và profile đã được tạo đúng chưa.
+
+### 4. Bật Email Auth
+
+Trong Supabase Dashboard:
+
+```text
+Authentication > Providers > Email
+```
+
+Bật Email provider. Khi demo, nếu muốn đăng nhập ngay không cần xác nhận email, có thể tạo user thủ công trong:
+
+```text
+Authentication > Users > Add user
+```
+
+và bật `Auto Confirm User`.
+
+### 5. Cấu hình URL cho Auth
+
+Vào:
+
+```text
+Authentication > URL Configuration
+```
+
+Khi chạy local:
+
+```text
+Site URL:
+http://localhost:5173
+
+Redirect URLs:
+http://localhost:5173
+http://127.0.0.1:5173
+```
+
+Khi deploy production:
+
+```text
+Site URL:
+https://ge0legacy.vercel.app
+
+Redirect URLs:
+https://ge0legacy.vercel.app
+```
+
+Nếu deploy sang domain khác, thêm domain đó vào đây.
+
+## Cấu hình Google Account Linking
+
+Tính năng này dùng để liên kết một tài khoản Google với tài khoản email/password đã có sẵn trong GeoLegacy.
+
+Luồng hiện tại:
+
+1. User đăng nhập bằng email/password.
+2. User mở Profile Center.
+3. User bấm Link Google.
+4. App mở Google Identity popup.
+5. Supabase liên kết Google identity vào user hiện tại.
+6. UI hiển thị email Google đã link, ví dụ `quanl...@vku.udn.vn`.
+
+### 1. Tạo OAuth Client trên Google Cloud
+
+Vào Google Cloud Console:
+
+```text
+Google Auth Platform > Clients > Create Client
+```
+
+Chọn:
+
+```text
+Application type: Web application
+```
+
+### 2. Thêm Authorized JavaScript origins
+
+Với production:
+
+```text
+https://ge0legacy.vercel.app
+```
+
+Với local:
+
+```text
+http://localhost:5173
+http://127.0.0.1:5173
+```
+
+Không thêm dấu `/` ở cuối.
+
+Đúng:
+
+```text
+https://ge0legacy.vercel.app
+```
+
+Sai:
+
+```text
+https://ge0legacy.vercel.app/
+https://ge0legacy.vercel.app/auth/callback
+```
+
+### 3. Thêm Authorized redirect URI
+
+Redirect URI phải là callback URL của Supabase:
+
+```text
+https://your-project-ref.supabase.co/auth/v1/callback
+```
+
+Với project hiện tại:
+
+```text
+https://coqfzlzcvvzclblbsuck.supabase.co/auth/v1/callback
+```
+
+Không dùng URL Vercel ở mục này. Google sẽ redirect về Supabase trước.
+
+### 4. Gắn Client ID và Client Secret vào Supabase
+
+Vào Supabase:
+
+```text
+Authentication > Providers > Google
+```
+
+Bật Google provider, sau đó nhập:
+
+- Client ID
+- Client Secret
+
+Lưu lại cấu hình.
+
+### 5. Bật Manual Linking
+
+Trong Supabase Auth settings, bật Manual Linking. Nếu không bật, `linkIdentity()` sẽ bị Supabase từ chối.
+
+### 6. Test
+
+1. Đăng nhập bằng email/password.
+2. Mở menu tài khoản.
+3. Chọn View Profile.
+4. Ở Security Links, bấm Link Google.
+5. Chọn tài khoản Google.
+6. Nếu thành công, profile sẽ hiện:
+
+```text
+Linked to <email-google-rút-gọn>
+```
+
+## Tạo tài khoản admin
+
+Admin không được tạo bằng frontend. Quyền admin nằm trong database tại:
+
+```text
+public.profiles.role = 'admin'
+```
+
+### 1. Tạo user trong Supabase Auth
+
+Vào:
+
+```text
+Authentication > Users > Add user
+```
+
+Ví dụ:
+
+```text
+Email: admin@geolegacy.local
+Password: chọn mật khẩu mạnh
+Auto Confirm User: enabled
+```
+
+### 2. Promote user thành admin
+
+Chạy file sau trong Supabase SQL Editor:
+
+```text
+supabase/bootstrap_admin.sql
+```
+
+Mặc định file này promote email:
+
+```text
+admin@geolegacy.local
+```
+
+Nếu muốn dùng email khác, sửa email trong `bootstrap_admin.sql` trước khi chạy.
+
+### 3. Mở Admin Console
+
+1. Đăng nhập GeoLegacy bằng tài khoản admin.
+2. Mở menu tài khoản ở góc trên.
+3. Chọn Admin Console.
+
+## Luồng hoạt động chính
+
+### User gửi landmark mới
+
+1. User đăng nhập.
+2. Bấm Add Site.
+3. Nhập thông tin landmark.
+4. Upload ảnh nếu có.
+5. Submit.
+6. App lưu landmark vào database với:
+
+```text
+status = pending
+```
+
+Landmark pending không hiển thị công khai cho user thường.
+
+### Admin duyệt landmark
+
+1. Admin đăng nhập.
+2. Mở Admin Console.
+3. Tìm landmark đang pending.
+4. Kiểm tra và chỉnh sửa thông tin nếu cần.
+5. Bấm Publish.
+6. Landmark chuyển sang:
+
+```text
+status = published
+```
+
+Sau đó landmark sẽ xuất hiện trên globe cho tất cả người dùng.
+
+### User tương tác với landmark
+
+Với landmark đã published:
+
+- User chưa đăng nhập có thể xem thông tin và chia sẻ link.
+- User đã đăng nhập có thể bookmark và bình luận.
+- Admin có thể chỉnh sửa hoặc xóa landmark.
+
+## Scripts
+
+Chạy dev server:
+
+```bash
+npm run dev
+```
+
+Build production:
 
 ```bash
 npm run build
 ```
 
-File build xuất ra thư mục `dist/`. Có thể deploy lên:
-- [Vercel](https://vercel.com/) (khuyến nghị — kéo thả repo GitHub là xong)
-- [Netlify](https://netlify.com/)
-- [GitHub Pages](https://pages.github.com/)
+Preview production build:
 
----
-
-## 🔐 Biến môi trường
-
-| Biến | Mô tả | Bắt buộc |
-|---|---|---|
-| `VITE_SUPABASE_URL` | URL project Supabase | ✅ |
-| `VITE_SUPABASE_ANON_KEY` | Anon key (public) của Supabase | ✅ |
-| `VITE_AUTH_REDIRECT_URL` | URL redirect fallback khi chạy ngoài browser | ❌ |
-
-> ⚠️ **Không bao giờ commit file `.env` lên GitHub!** File này đã được `.gitignore` bảo vệ.
-
----
-
-## 🧩 Luồng hoạt động chính
-
-```
-Người dùng mở web
-    → Globe 3D tự xoay, hiển thị các pin địa danh
-    → Click vào pin → Side Panel mở ra với thông tin chi tiết
-    → Có thể tìm kiếm / lọc theo thời đại ở thanh Header
-    → Đăng nhập → có thể bookmark, bình luận, submit địa danh mới
-    → Submit địa danh → status "pending" → admin duyệt → "published"
+```bash
+npm run preview
 ```
 
----
+## Database
 
-## 🤝 Đóng góp
+### `profiles`
 
-1. Fork repo này
-2. Tạo branch mới: `git checkout -b feature/ten-tinh-nang`
-3. Commit thay đổi: `git commit -m "Add: mô tả thay đổi"`
-4. Push lên: `git push origin feature/ten-tinh-nang`
-5. Tạo Pull Request
+Lưu thông tin profile và role của user.
 
----
+Các field chính:
 
-## 📄 License
+- `id`
+- `username`
+- `display_name`
+- `avatar_url`
+- `bio`
+- `home_region`
+- `website_url`
+- `role`
+- `created_at`
+- `updated_at`
 
-MIT — Tự do sử dụng, chỉnh sửa và phân phối.
+Role hợp lệ:
+
+```text
+user
+admin
+```
+
+### `landmarks`
+
+Lưu dữ liệu địa danh.
+
+Các field chính:
+
+- `id`
+- `slug`
+- `title`
+- `description`
+- `lat`
+- `lng`
+- `era`
+- `region`
+- `image_url`
+- `author_id`
+- `status`
+- `created_at`
+
+Status hợp lệ:
+
+```text
+pending
+published
+```
+
+### `comments`
+
+Lưu bình luận của user trên landmark.
+
+Các field chính:
+
+- `id`
+- `landmark_id`
+- `user_id`
+- `content`
+- `created_at`
+
+### `bookmarks`
+
+Lưu landmark yêu thích theo từng user.
+
+Các field chính:
+
+- `user_id`
+- `landmark_id`
+- `created_at`
+
+Khóa chính là:
+
+```text
+(user_id, landmark_id)
+```
+
+Nhờ vậy một user không thể bookmark trùng cùng một landmark.
+
+## Deploy lên Vercel
+
+### Cấu hình project
+
+Khi import repo vào Vercel, dùng cấu hình:
+
+```text
+Framework Preset: Vite
+Build Command: npm run build
+Output Directory: dist
+Install Command: npm install
+```
+
+### Environment Variables
+
+Trong Vercel:
+
+```text
+Project Settings > Environment Variables
+```
+
+Thêm:
+
+```env
+VITE_SUPABASE_URL=https://your-project-ref.supabase.co
+VITE_SUPABASE_ANON_KEY=your-supabase-anon-or-publishable-key
+VITE_AUTH_REDIRECT_URL=https://your-production-domain/
+```
+
+Với domain hiện tại:
+
+```env
+VITE_AUTH_REDIRECT_URL=https://ge0legacy.vercel.app/
+```
+
+### Sau khi deploy
+
+Nhớ cập nhật production domain ở:
+
+1. Supabase Authentication > URL Configuration.
+2. Google Cloud OAuth Client > Authorized JavaScript origins.
+
+Với domain hiện tại, Google origin là:
+
+```text
+https://ge0legacy.vercel.app
+```
+
+## Lỗi thường gặp
+
+### Thêm landmark xong F5 thì bị mất
+
+Nếu user thường submit landmark mới, landmark đó được lưu với trạng thái `pending`. User thường không thấy pending landmark sau khi refresh.
+
+Cách kiểm tra:
+
+1. Đăng nhập admin.
+2. Mở Admin Console.
+3. Vào danh sách landmark.
+4. Tìm bài pending vừa submit.
+5. Publish nếu muốn hiển thị công khai.
+
+### Không thấy Admin Console
+
+Tài khoản hiện tại chưa có role admin.
+
+Cách sửa:
+
+1. Tạo hoặc chọn một user trong Supabase Auth.
+2. Sửa email trong `supabase/bootstrap_admin.sql` nếu cần.
+3. Chạy `bootstrap_admin.sql`.
+4. Đăng xuất rồi đăng nhập lại.
+
+### Profile báo cần setup backend
+
+Auth đăng nhập được, nhưng bảng `public.profiles` chưa đúng hoặc chưa tồn tại.
+
+Cách sửa:
+
+```text
+Chạy lại supabase/schema.sql trong Supabase SQL Editor.
+```
+
+Sau đó refresh app.
+
+### Google popup could not open
+
+Google chưa cho phép domain hiện tại gọi popup.
+
+Cách sửa trong Google Cloud OAuth Client:
+
+```text
+Authorized JavaScript origins:
+https://ge0legacy.vercel.app
+http://localhost:5173
+http://127.0.0.1:5173
+```
+
+Chỉ thêm những domain thật sự dùng.
+
+### Unable to exchange external code
+
+Lỗi này thường do Google OAuth Client Secret hoặc redirect URI sai.
+
+Kiểm tra Google Cloud OAuth Client > Authorized redirect URIs:
+
+```text
+https://your-project-ref.supabase.co/auth/v1/callback
+```
+
+Với project hiện tại:
+
+```text
+https://coqfzlzcvvzclblbsuck.supabase.co/auth/v1/callback
+```
+
+Sau đó kiểm tra lại Supabase:
+
+```text
+Authentication > Providers > Google
+```
+
+Đảm bảo Client ID và Client Secret đúng với OAuth client đang dùng.
+
+### Upload ảnh không được
+
+Kiểm tra đã chạy `supabase/schema.sql` chưa. File này tạo bucket:
+
+```text
+landmark-images
+```
+
+Upload chỉ cho phép user đã đăng nhập upload vào path:
+
+```text
+pending/<user-id>/
+```
+
+### User thường thấy landmark pending
+
+Kiểm tra RLS policy của bảng `landmarks`. Policy select đúng phải giới hạn:
+
+```sql
+status = 'published'
+or public.is_admin(auth.uid())
+```
+
+Nếu policy bị thiếu hoặc sai, chạy lại `supabase/schema.sql`.
+
+## Ghi chú bảo mật
+
+- Không commit `.env` hoặc `.env.local`.
+- Supabase anon/publishable key có thể dùng ở frontend, nhưng service role key tuyệt đối không được đưa vào client.
+- Role admin phải được cấp ở database, không tin vào state phía frontend.
+- User thường không thể tự đổi `role` vì trigger trong database chặn việc self-escalation.
+- User thường không thể tự publish landmark vì trigger chặn thay đổi `status` nếu không phải admin.
+- RLS phải luôn bật cho các bảng cộng đồng.
+
+## License
+
+MIT. Có thể sử dụng, chỉnh sửa và phân phối lại theo điều khoản của license.

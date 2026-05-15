@@ -74,7 +74,6 @@ export async function createPendingLandmark(payload) {
     lng,
     imageFile,
     authorId = null,
-    authorName = "Community Explorer",
   } = payload;
 
   if (!authorId) {
@@ -95,25 +94,23 @@ export async function createPendingLandmark(payload) {
     status: "pending",
   };
 
-  const { data, error } = await supabase
-    .from("landmarks")
-    .insert(record)
-    .select(
-      "id,title,description,lat,lng,era,region,image_url,author_id,status,created_at",
-    )
-    .single();
+  const { error } = await supabase.from("landmarks").insert(record);
 
   if (error) {
     throw error;
   }
 
-  return toClientLandmark({ ...data, author: authorName });
+  return {
+    title,
+    status: "pending",
+  };
 }
 
 export async function fetchVisibleLandmarks() {
   const { data, error } = await supabase
     .from("landmarks")
     .select("id,title,description,lat,lng,era,region,image_url,author_id,status,created_at")
+    .eq("status", "published")
     .order("created_at", { ascending: false });
 
   if (error) {

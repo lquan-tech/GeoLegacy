@@ -14,7 +14,6 @@ export default function App() {
   const selectedLandmark = useChronoStore(selectSelectedLandmark);
   const isAddSiteOpen = useChronoStore((state) => state.isAddSiteOpen);
   const clearSelectedLandmark = useChronoStore((state) => state.clearSelectedLandmark);
-  const addLandmark = useChronoStore((state) => state.addLandmark);
   const loadLandmarks = useChronoStore((state) => state.loadLandmarks);
   const closeAddSite = useChronoStore((state) => state.closeAddSite);
   const authUser = useChronoStore((state) => state.authUser);
@@ -63,16 +62,14 @@ export default function App() {
     }
 
     try {
-      const createdLandmark = await createPendingLandmark({
+      const submittedLandmark = await createPendingLandmark({
         ...payload,
         authorId: authUser.id,
-        authorName: authUser.display_name || authUser.username,
       });
 
-      addLandmark(createdLandmark);
       showToast({
         title: "Submitted for review",
-        description: `${createdLandmark.title} is pending moderation.`,
+        description: `${submittedLandmark.title} is waiting for admin approval.`,
         variant: "success",
       });
     } catch (error) {

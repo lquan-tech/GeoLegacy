@@ -270,7 +270,6 @@ create policy "Published landmarks are public"
 on public.landmarks for select
 using (
   status = 'published'
-  or auth.uid() = author_id
   or public.is_admin(auth.uid())
 );
 

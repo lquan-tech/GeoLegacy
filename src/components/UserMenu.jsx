@@ -148,7 +148,7 @@ export default function UserMenu() {
               className="flex w-full items-center gap-2 border-b border-slate-200 px-3 py-3 text-left text-sm font-semibold text-slate-600 transition hover:bg-amber-50 hover:text-amber-700"
             >
               <ClipboardCheck size={16} />
-              Review Submissions
+              Admin Console
             </button>
           )}
 

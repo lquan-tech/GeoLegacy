@@ -291,6 +291,12 @@ to authenticated
 using (auth.uid() = author_id or public.is_admin(auth.uid()))
 with check (auth.uid() = author_id or public.is_admin(auth.uid()));
 
+drop policy if exists "Admins can delete landmarks" on public.landmarks;
+create policy "Admins can delete landmarks"
+on public.landmarks for delete
+to authenticated
+using (public.is_admin(auth.uid()));
+
 drop policy if exists "Comments on published landmarks are public" on public.comments;
 create policy "Comments on published landmarks are public"
 on public.comments for select
@@ -302,6 +308,12 @@ using (
       and landmarks.status = 'published'
   )
 );
+
+drop policy if exists "Admins can read all comments" on public.comments;
+create policy "Admins can read all comments"
+on public.comments for select
+to authenticated
+using (public.is_admin(auth.uid()));
 
 drop policy if exists "Authenticated users can comment" on public.comments;
 create policy "Authenticated users can comment"
@@ -315,6 +327,12 @@ on public.comments for update
 to authenticated
 using (auth.uid() = user_id or public.is_admin(auth.uid()))
 with check (auth.uid() = user_id or public.is_admin(auth.uid()));
+
+drop policy if exists "Users and admins can delete comments" on public.comments;
+create policy "Users and admins can delete comments"
+on public.comments for delete
+to authenticated
+using (auth.uid() = user_id or public.is_admin(auth.uid()));
 
 drop policy if exists "Users can read their bookmarks" on public.bookmarks;
 create policy "Users can read their bookmarks"

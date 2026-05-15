@@ -327,6 +327,25 @@ export const useChronoStore = create((set) => ({
       landmarks: mergeLandmarksById(state.landmarks, [landmark]),
       selectedLandmarkId: landmark.id,
     })),
+  updateLandmark: (landmark) =>
+    set((state) => {
+      const nextLandmarks = mergeLandmarksById(state.landmarks, [landmark]);
+      const isVisible = landmark.status !== LANDMARK_STATUSES.pending || state.authUser?.role === "admin";
+
+      return {
+        landmarks: isVisible
+          ? nextLandmarks
+          : nextLandmarks.filter((currentLandmark) => currentLandmark.id !== landmark.id),
+        selectedLandmarkId:
+          isVisible || state.selectedLandmarkId !== landmark.id ? state.selectedLandmarkId : null,
+      };
+    }),
+  removeLandmark: (landmarkId) =>
+    set((state) => ({
+      landmarks: state.landmarks.filter((landmark) => landmark.id !== landmarkId),
+      selectedLandmarkId:
+        state.selectedLandmarkId === landmarkId ? null : state.selectedLandmarkId,
+    })),
   addComment: (landmarkId, content) =>
     set((state) => {
       const trimmedContent = content.trim();

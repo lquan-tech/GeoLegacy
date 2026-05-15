@@ -1,0 +1,159 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap");
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+:root {
+  color-scheme: light;
+  background: #f8fafc;
+  font-family:
+    "Inter",
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #f8fafc;
+}
+
+body {
+  min-width: 320px;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.scanline-overlay {
+  opacity: 0.08;
+  background:
+    linear-gradient(rgba(14, 116, 144, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(14, 116, 144, 0.04) 1px, transparent 1px);
+  background-size: 100% 5px, 6px 100%;
+  mix-blend-mode: multiply;
+}
+
+.chrono-pin {
+  position: relative;
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #0f172a;
+  cursor: pointer;
+  outline: none;
+  pointer-events: auto;
+  transform: translate(-50%, -50%);
+}
+
+.chrono-pin__core {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.96);
+  border-radius: 999px;
+  background: #0f766e;
+  box-shadow:
+    0 0 0 2px rgba(15, 118, 110, 0.22),
+    0 0 18px rgba(15, 118, 110, 0.44),
+    0 0 26px rgba(245, 158, 11, 0.28);
+  transition:
+    transform 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.chrono-pin__halo {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(15, 118, 110, 0.62);
+  border-radius: 999px;
+  animation: chrono-pulse 1.85s infinite;
+  box-shadow: 0 0 18px rgba(15, 118, 110, 0.24);
+}
+
+.chrono-pin__label {
+  position: absolute;
+  left: 22px;
+  max-width: 148px;
+  padding: 6px 9px;
+  border: 1px solid rgba(15, 118, 110, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.16);
+  color: rgba(15, 23, 42, 0.92);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  opacity: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  transform: translateX(-7px) scale(0.96);
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease,
+    border-color 180ms ease;
+  white-space: nowrap;
+}
+
+.chrono-pin:hover .chrono-pin__core,
+.chrono-pin:focus-visible .chrono-pin__core,
+.chrono-pin--active .chrono-pin__core {
+  background: #f59e0b;
+  box-shadow:
+    0 0 0 3px rgba(255, 255, 255, 0.86),
+    0 0 24px rgba(245, 158, 11, 0.52);
+  transform: scale(1.22);
+}
+
+.chrono-pin:hover .chrono-pin__label,
+.chrono-pin:focus-visible .chrono-pin__label,
+.chrono-pin--active .chrono-pin__label {
+  border-color: rgba(15, 118, 110, 0.34);
+  opacity: 1;
+  transform: translateX(0) scale(1);
+}
+
+.chrono-pin--active .chrono-pin__halo {
+  border-color: rgba(245, 158, 11, 0.82);
+  box-shadow:
+    0 0 22px rgba(15, 118, 110, 0.34),
+    0 0 36px rgba(245, 158, 11, 0.34);
+}
+
+@keyframes chrono-pulse {
+  0% {
+    opacity: 0.88;
+    transform: scale(0.64);
+  }
+  72% {
+    opacity: 0;
+    transform: scale(1.65);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.65);
+  }
+}

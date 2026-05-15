@@ -1,3 +1,4 @@
+import AdminReviewModal from "./components/AdminReviewModal";
 import AuthModal from "./components/AuthModal";
 import AuthProvider from "./components/AuthProvider";
 import AppShell from "./components/AppShell";
@@ -95,6 +96,7 @@ export default function App() {
           onClose={closeAddSite}
           onCreate={handleCreateLandmark}
         />
+        <AdminReviewModal />
         <ProfileModal />
         <AuthModal />
       </AppShell>

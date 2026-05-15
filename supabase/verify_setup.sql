@@ -11,7 +11,12 @@ select
   event_object_schema,
   event_object_table
 from information_schema.triggers
-where trigger_name in ('on_auth_user_created', 'touch_profiles_updated_at')
+where trigger_name in (
+  'on_auth_user_created',
+  'touch_profiles_updated_at',
+  'prevent_profile_role_self_escalation',
+  'prevent_landmark_status_self_publish'
+)
 order by trigger_name;
 
 select

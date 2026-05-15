@@ -98,6 +98,40 @@ begin
 end;
 $$;
 
+create or replace function public.prevent_profile_role_self_escalation()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if new.role is distinct from old.role
+    and auth.role() = 'authenticated'
+    and not public.is_admin(auth.uid()) then
+    raise exception 'Only admins can change profile roles.';
+  end if;
+
+  return new;
+end;
+$$;
+
+create or replace function public.prevent_landmark_status_self_publish()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if new.status is distinct from old.status
+    and auth.role() = 'authenticated'
+    and not public.is_admin(auth.uid()) then
+    raise exception 'Only admins can change landmark status.';
+  end if;
+
+  return new;
+end;
+$$;
+
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -149,6 +183,16 @@ drop trigger if exists touch_profiles_updated_at on public.profiles;
 create trigger touch_profiles_updated_at
 before update on public.profiles
 for each row execute function public.touch_updated_at();
+
+drop trigger if exists prevent_profile_role_self_escalation on public.profiles;
+create trigger prevent_profile_role_self_escalation
+before update of role on public.profiles
+for each row execute function public.prevent_profile_role_self_escalation();
+
+drop trigger if exists prevent_landmark_status_self_publish on public.landmarks;
+create trigger prevent_landmark_status_self_publish
+before update of status on public.landmarks
+for each row execute function public.prevent_landmark_status_self_publish();
 
 insert into public.profiles (id, username, display_name, avatar_url, role, created_at)
 select

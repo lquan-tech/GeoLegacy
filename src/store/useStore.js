@@ -240,6 +240,7 @@ export const useChronoStore = create((set) => ({
   isAuthModalOpen: false,
   authModalReason: "",
   isProfileModalOpen: false,
+  isAdminReviewOpen: false,
   toast: null,
   searchQuery: "",
   activeEra: "all",
@@ -270,6 +271,8 @@ export const useChronoStore = create((set) => ({
     }),
   openProfileModal: () => set({ isProfileModalOpen: true }),
   closeProfileModal: () => set({ isProfileModalOpen: false }),
+  openAdminReview: () => set({ isAdminReviewOpen: true }),
+  closeAdminReview: () => set({ isAdminReviewOpen: false }),
   updateAuthProfile: (profileUpdates) =>
     set((state) => {
       if (!state.authUser) {

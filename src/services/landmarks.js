@@ -123,6 +123,36 @@ export async function fetchVisibleLandmarks() {
   return data.map((record) => toClientLandmark(record));
 }
 
+export async function fetchPendingLandmarks() {
+  const { data, error } = await supabase
+    .from("landmarks")
+    .select("id,title,description,lat,lng,era,region,image_url,author_id,status,created_at")
+    .eq("status", "pending")
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    throw error;
+  }
+
+  return data.map((record) => toClientLandmark(record));
+}
+
+export async function approvePendingLandmark(landmarkId) {
+  const { data, error } = await supabase
+    .from("landmarks")
+    .update({ status: "published" })
+    .eq("id", landmarkId)
+    .eq("status", "pending")
+    .select("id,title,description,lat,lng,era,region,image_url,author_id,status,created_at")
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return toClientLandmark(data);
+}
+
 export async function fetchPublishedLandmarks() {
   const { data, error } = await supabase
     .from("landmarks")

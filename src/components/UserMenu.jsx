@@ -1,4 +1,12 @@
-import { ChevronDown, Loader2, LogIn, LogOut, Settings, UserRound } from "lucide-react";
+import {
+  ChevronDown,
+  ClipboardCheck,
+  Loader2,
+  LogIn,
+  LogOut,
+  Settings,
+  UserRound,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { signOutCurrentUser } from "../services/auth";
 import { useChronoStore } from "../store/useStore";
@@ -24,6 +32,7 @@ export default function UserMenu() {
   const authStatus = useChronoStore((state) => state.authStatus);
   const openAuthModal = useChronoStore((state) => state.openAuthModal);
   const openProfileModal = useChronoStore((state) => state.openProfileModal);
+  const openAdminReview = useChronoStore((state) => state.openAdminReview);
   const showToast = useChronoStore((state) => state.showToast);
 
   useEffect(() => {
@@ -76,6 +85,7 @@ export default function UserMenu() {
   const displayName = getDisplayName(authUser);
   const initials = getInitials(displayName);
   const needsBackendSetup = Boolean(authUser.sync_error);
+  const isAdmin = authUser.role === "admin";
 
   return (
     <div ref={menuRef} className="relative shrink-0">
@@ -127,6 +137,20 @@ export default function UserMenu() {
             <Settings size={16} />
             View Profile
           </button>
+
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={() => {
+                setIsOpen(false);
+                openAdminReview();
+              }}
+              className="flex w-full items-center gap-2 border-b border-slate-200 px-3 py-3 text-left text-sm font-semibold text-slate-600 transition hover:bg-amber-50 hover:text-amber-700"
+            >
+              <ClipboardCheck size={16} />
+              Review Submissions
+            </button>
+          )}
 
           <button
             type="button"

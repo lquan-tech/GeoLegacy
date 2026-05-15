@@ -80,6 +80,31 @@ const initialCommentsByLandmark = {
   ],
 };
 
+function createInitialLandmarks() {
+  return initialLandmarks.map((landmark) => ({
+    status: LANDMARK_STATUSES.published,
+    region: landmark.location?.split(",").at(-1)?.trim() ?? "Global",
+    ...landmark,
+  }));
+}
+
+function mergeLandmarksById(...landmarkGroups) {
+  const landmarkMap = new Map();
+
+  landmarkGroups.flat().forEach((landmark) => {
+    if (!landmark?.id) {
+      return;
+    }
+
+    landmarkMap.set(landmark.id, {
+      ...(landmarkMap.get(landmark.id) ?? {}),
+      ...landmark,
+    });
+  });
+
+  return Array.from(landmarkMap.values());
+}
+
 /**
  * @typedef {Object} Landmark
  * @property {string} id
@@ -205,11 +230,7 @@ export const selectIsLandmarkBookmarked = (landmarkId) => (state) =>
   Boolean(landmarkId && state.bookmarkedIds.includes(landmarkId));
 
 export const useChronoStore = create((set) => ({
-  landmarks: initialLandmarks.map((landmark) => ({
-    status: LANDMARK_STATUSES.published,
-    region: landmark.location?.split(",").at(-1)?.trim() ?? "Global",
-    ...landmark,
-  })),
+  landmarks: createInitialLandmarks(),
   profilesById: initialProfilesById,
   commentsByLandmark: initialCommentsByLandmark,
   bookmarkedIds: [],
@@ -286,9 +307,21 @@ export const useChronoStore = create((set) => ({
           },
     ),
   closeAddSite: () => set({ isAddSiteOpen: false }),
+  loadLandmarks: (landmarks) =>
+    set((state) => {
+      const nextLandmarks = mergeLandmarksById(createInitialLandmarks(), landmarks);
+      const hasSelectedLandmark = nextLandmarks.some(
+        (landmark) => landmark.id === state.selectedLandmarkId,
+      );
+
+      return {
+        landmarks: nextLandmarks,
+        selectedLandmarkId: hasSelectedLandmark ? state.selectedLandmarkId : null,
+      };
+    }),
   addLandmark: (landmark) =>
     set((state) => ({
-      landmarks: [...state.landmarks, landmark],
+      landmarks: mergeLandmarksById(state.landmarks, [landmark]),
       selectedLandmarkId: landmark.id,
     })),
   addComment: (landmarkId, content) =>

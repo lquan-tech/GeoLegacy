@@ -2,7 +2,7 @@ import { supabase } from "../lib/supabaseClient";
 import { toClientLandmark } from "./landmarks";
 
 const LANDMARK_SELECT =
-  "id,title,description,lat,lng,era,region,image_url,author_id,status,created_at";
+  "id,slug,title,description,lat,lng,era,region,image_url,author_id,status,created_at";
 
 const PROFILE_SELECT =
   "id,username,display_name,avatar_url,bio,home_region,website_url,role,created_at,updated_at";

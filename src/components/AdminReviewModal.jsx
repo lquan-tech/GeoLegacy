@@ -78,6 +78,10 @@ function getDisplayName(profile) {
   return profile.display_name || profile.username || "Community Explorer";
 }
 
+function getLandmarkRecordId(landmark) {
+  return landmark.db_id || landmark.id;
+}
+
 export default function AdminReviewModal() {
   const isOpen = useChronoStore((state) => state.isAdminReviewOpen);
   const closeAdminReview = useChronoStore((state) => state.closeAdminReview);
@@ -235,7 +239,10 @@ export default function AdminReviewModal() {
     try {
       setActionId(`${actionLabel}-${landmark.id}`);
       setErrorMessage("");
-      const updatedLandmark = await updateAdminLandmarkStatus(landmark.id, status);
+      const updatedLandmark = await updateAdminLandmarkStatus(
+        getLandmarkRecordId(landmark),
+        status,
+      );
 
       updateLocalLandmark(updatedLandmark);
       showToast({
@@ -261,7 +268,7 @@ export default function AdminReviewModal() {
     try {
       setActionId(`delete-${landmark.id}`);
       setErrorMessage("");
-      await deleteAdminLandmark(landmark.id);
+      await deleteAdminLandmark(getLandmarkRecordId(landmark));
       removeLocalLandmark(landmark.id);
       showToast({
         title: landmark.status === LANDMARK_STATUSES.pending ? "Submission rejected" : "Landmark deleted",
@@ -298,7 +305,10 @@ export default function AdminReviewModal() {
     try {
       setActionId(`save-${editingLandmark.id}`);
       setErrorMessage("");
-      const updatedLandmark = await updateAdminLandmark(editingLandmark.id, editForm);
+      const updatedLandmark = await updateAdminLandmark(
+        getLandmarkRecordId(editingLandmark),
+        editForm,
+      );
 
       updateLocalLandmark(updatedLandmark);
       setEditForm(getLandmarkForm(updatedLandmark));

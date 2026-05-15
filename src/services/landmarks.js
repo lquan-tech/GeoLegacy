@@ -16,7 +16,9 @@ function getFileExtension(file) {
 
 export function toClientLandmark(record) {
   return {
-    id: record.id,
+    id: record.slug || record.id,
+    db_id: record.id,
+    slug: record.slug,
     title: record.title,
     description: record.description,
     lat: Number(record.lat),
@@ -109,7 +111,7 @@ export async function createPendingLandmark(payload) {
 export async function fetchVisibleLandmarks() {
   const { data, error } = await supabase
     .from("landmarks")
-    .select("id,title,description,lat,lng,era,region,image_url,author_id,status,created_at")
+    .select("id,slug,title,description,lat,lng,era,region,image_url,author_id,status,created_at")
     .eq("status", "published")
     .order("created_at", { ascending: false });
 
@@ -123,7 +125,7 @@ export async function fetchVisibleLandmarks() {
 export async function fetchPendingLandmarks() {
   const { data, error } = await supabase
     .from("landmarks")
-    .select("id,title,description,lat,lng,era,region,image_url,author_id,status,created_at")
+    .select("id,slug,title,description,lat,lng,era,region,image_url,author_id,status,created_at")
     .eq("status", "pending")
     .order("created_at", { ascending: true });
 
@@ -140,7 +142,7 @@ export async function approvePendingLandmark(landmarkId) {
     .update({ status: "published" })
     .eq("id", landmarkId)
     .eq("status", "pending")
-    .select("id,title,description,lat,lng,era,region,image_url,author_id,status,created_at")
+    .select("id,slug,title,description,lat,lng,era,region,image_url,author_id,status,created_at")
     .single();
 
   if (error) {
@@ -153,7 +155,7 @@ export async function approvePendingLandmark(landmarkId) {
 export async function fetchPublishedLandmarks() {
   const { data, error } = await supabase
     .from("landmarks")
-    .select("id,title,description,lat,lng,era,region,image_url,author_id,status,created_at")
+    .select("id,slug,title,description,lat,lng,era,region,image_url,author_id,status,created_at")
     .eq("status", "published")
     .order("created_at", { ascending: false });
 

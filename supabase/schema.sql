@@ -29,6 +29,7 @@ alter table public.profiles
 
 create table if not exists public.landmarks (
   id uuid primary key default gen_random_uuid(),
+  slug text unique,
   title text not null,
   description text not null,
   lat double precision not null check (lat between -90 and 90),
@@ -40,6 +41,12 @@ create table if not exists public.landmarks (
   status text not null default 'pending' check (status in ('pending', 'published')),
   created_at timestamptz not null default now()
 );
+
+alter table public.landmarks
+  add column if not exists slug text;
+
+create unique index if not exists landmarks_slug_key
+  on public.landmarks (slug);
 
 create table if not exists public.comments (
   id uuid primary key default gen_random_uuid(),
@@ -64,6 +71,7 @@ create index if not exists landmarks_search_idx
     to_tsvector(
       'english',
       coalesce(title, '') || ' ' ||
+      coalesce(slug, '') || ' ' ||
       coalesce(description, '') || ' ' ||
       coalesce(era, '') || ' ' ||
       coalesce(region, '')
@@ -350,6 +358,208 @@ create policy "Users can delete bookmarks"
 on public.bookmarks for delete
 to authenticated
 using (auth.uid() = user_id);
+
+insert into public.landmarks (
+  slug,
+  title,
+  description,
+  lat,
+  lng,
+  era,
+  region,
+  image_url,
+  status
+)
+values
+  (
+    'colosseum',
+    'Colosseum',
+    'A monumental Flavian amphitheater where imperial spectacle, architecture, and public life converged at the heart of ancient Rome.',
+    41.8902,
+    12.4922,
+    '70 AD',
+    'Rome, Italy',
+    'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=1400&q=80',
+    'published'
+  ),
+  (
+    'giza',
+    'Great Pyramid of Giza',
+    'The last remaining wonder of the ancient world, engineered as a royal tomb and aligned with extraordinary astronomical precision.',
+    29.9792,
+    31.1342,
+    '2560 BC',
+    'Giza, Egypt',
+    'https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?auto=format&fit=crop&w=1400&q=80',
+    'published'
+  ),
+  (
+    'machu-picchu',
+    'Machu Picchu',
+    'An Incan mountain citadel layered into the Andes, combining sacred geography, agricultural terraces, and stonework without mortar.',
+    -13.1631,
+    -72.545,
+    '1450 AD',
+    'Cusco Region, Peru',
+    'https://images.unsplash.com/photo-1526392060635-9d6019884377?auto=format&fit=crop&w=1400&q=80',
+    'published'
+  ),
+  (
+    'great-wall',
+    'Great Wall',
+    'A vast defensive network expanded over dynasties, shaping trade corridors, military movement, and frontier identity.',
+    40.4319,
+    116.5704,
+    '7th c. BC onward',
+    'Northern China',
+    'https://images.unsplash.com/photo-1508804185872-d7badad00f7d?auto=format&fit=crop&w=1400&q=80',
+    'published'
+  ),
+  (
+    'angkor-wat',
+    'Angkor Wat',
+    'A Khmer temple city whose towers, galleries, and waterworks encode cosmology, kingship, and regional power.',
+    13.4125,
+    103.867,
+    '12th c. AD',
+    'Siem Reap, Cambodia',
+    'https://images.unsplash.com/photo-1589876873315-3f316dbee0cc?auto=format&fit=crop&w=1400&q=80',
+    'published'
+  ),
+  (
+    'taj-mahal',
+    'Taj Mahal',
+    'A marble mausoleum commissioned by Shah Jahan, renowned for its garden symmetry, calligraphy, and shifting luminous surface.',
+    27.1751,
+    78.0421,
+    '1632 AD',
+    'Agra, India',
+    'https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1400&q=80',
+    'published'
+  ),
+  (
+    'stonehenge',
+    'Stonehenge',
+    'A prehistoric stone circle aligned to solar events, preserving clues about ritual, labor, and landscape-scale planning.',
+    51.1789,
+    -1.8262,
+    '3000 BC',
+    'Wiltshire, England',
+    'https://images.unsplash.com/photo-1566930844815-c22ddcfa9e6e?auto=format&fit=crop&w=1400&q=80',
+    'published'
+  ),
+  (
+    'gobekli-tepe',
+    'Gobekli Tepe',
+    'One of the world''s earliest known monumental ritual complexes, built by hunter-gatherer communities long before cities and writing.',
+    37.2231,
+    38.9225,
+    '9600 BC',
+    'Sanliurfa, Turkey',
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/G%C3%B6bekli_Tepe%2C_Urfa.jpg/1400px-G%C3%B6bekli_Tepe%2C_Urfa.jpg',
+    'published'
+  ),
+  (
+    'acropolis-athens',
+    'Acropolis of Athens',
+    'A citadel crowned by the Parthenon, representing classical Greek architecture, civic identity, and sacred urban space.',
+    37.9715,
+    23.7257,
+    '447 BC',
+    'Athens, Greece',
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/1029_Acropolis_of_Athens_in_Greece_at_night_Photo_by_Giles_Laurent.jpg/1400px-1029_Acropolis_of_Athens_in_Greece_at_night_Photo_by_Giles_Laurent.jpg',
+    'published'
+  ),
+  (
+    'persepolis',
+    'Persepolis',
+    'The ceremonial capital of the Achaemenid Empire, known for monumental stairways, reliefs, and imperial audience halls.',
+    29.9355,
+    52.8916,
+    '518 BC',
+    'Fars Province, Iran',
+    'https://upload.wikimedia.org/wikipedia/commons/3/39/Gate_of_All_Nations%2C_Persepolis.jpg',
+    'published'
+  ),
+  (
+    'petra',
+    'Petra',
+    'A Nabataean city carved into rose-colored sandstone cliffs, thriving at the crossroads of Arabian, Egyptian, and Mediterranean trade.',
+    30.3285,
+    35.4444,
+    '312 BC',
+    'Ma''an Governorate, Jordan',
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Al_Deir_Petra.JPG/1400px-Al_Deir_Petra.JPG',
+    'published'
+  ),
+  (
+    'chichen-itza',
+    'Chichen Itza',
+    'A major Maya city centered on temples, observatories, ball courts, and ceremonial architecture tied to astronomy and power.',
+    20.6843,
+    -88.5678,
+    '600 AD',
+    'Yucatan, Mexico',
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Chichen_Itza_3.jpg/1400px-Chichen_Itza_3.jpg',
+    'published'
+  ),
+  (
+    'hagia-sophia',
+    'Hagia Sophia',
+    'A Byzantine architectural landmark whose massive dome shaped religious, political, and artistic history across empires.',
+    41.0086,
+    28.9802,
+    '537 AD',
+    'Istanbul, Turkey',
+    'https://upload.wikimedia.org/wikipedia/commons/4/4a/Hagia_Sophia_%28228968325%29.jpeg',
+    'published'
+  ),
+  (
+    'borobudur',
+    'Borobudur',
+    'A vast Buddhist monument arranged as a mandala, with terraces, stupas, and relief panels guiding a symbolic pilgrimage path.',
+    -7.6079,
+    110.2038,
+    '9th c. AD',
+    'Central Java, Indonesia',
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Pradaksina.jpg/1400px-Pradaksina.jpg',
+    'published'
+  ),
+  (
+    'alhambra',
+    'Alhambra',
+    'A Nasrid palace-fortress celebrated for intricate stucco, water courts, gardens, and the refined urban culture of medieval Granada.',
+    37.1761,
+    -3.5881,
+    '13th c. AD',
+    'Granada, Spain',
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Dawn_Charles_V_Palace_Alhambra_Granada_Andalusia_Spain.jpg/1400px-Dawn_Charles_V_Palace_Alhambra_Granada_Andalusia_Spain.jpg',
+    'published'
+  ),
+  (
+    'forbidden-city',
+    'Forbidden City',
+    'The imperial palace complex of Ming and Qing China, planned around ritual hierarchy, court administration, and symbolic geometry.',
+    39.9163,
+    116.3972,
+    '1420 AD',
+    'Beijing, China',
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/The_Forbidden_City_-_View_from_Coal_Hill.jpg/1400px-The_Forbidden_City_-_View_from_Coal_Hill.jpg',
+    'published'
+  ),
+  (
+    'palace-of-versailles',
+    'Palace of Versailles',
+    'A royal residence transformed into a model of early modern statecraft, court spectacle, garden design, and absolutist power.',
+    48.8049,
+    2.1204,
+    '1682 AD',
+    'Versailles, France',
+    'https://upload.wikimedia.org/wikipedia/commons/d/d2/Versailles-Chateau-Jardins02.jpg',
+    'published'
+  )
+on conflict (slug) do update
+set image_url = coalesce(public.landmarks.image_url, excluded.image_url);
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (

@@ -154,6 +154,25 @@ export async function ensureUserProfile(user) {
 
   const username = `${sanitizeUsername(profile.username).slice(0, 44)}-${user.id.slice(0, 8)}`;
 
+  // 1. Try to read the existing profile first — preserves any saved changes
+  const { data: existingData, error: fetchError } = await supabase
+    .from("profiles")
+    .select("id,username,display_name,avatar_url,bio,home_region,website_url,role,created_at,updated_at")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  // If profile already exists in DB, return it as-is (don't overwrite saved fields)
+  if (!fetchError && existingData) {
+    return {
+      ...profile,
+      ...existingData,
+      email: user.email ?? "",
+      provider: user.app_metadata?.provider ?? "email",
+      auth_created_at: user.created_at,
+    };
+  }
+
+  // 2. Profile doesn't exist yet — create it for the first time
   const upsertRecord = {
     id: user.id,
     username,

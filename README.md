@@ -193,7 +193,7 @@ File build xuất ra thư mục `dist/`. Có thể deploy lên:
 |---|---|---|
 | `VITE_SUPABASE_URL` | URL project Supabase | ✅ |
 | `VITE_SUPABASE_ANON_KEY` | Anon key (public) của Supabase | ✅ |
-| `VITE_AUTH_REDIRECT_URL` | URL redirect sau khi đăng nhập OAuth | ✅ |
+| `VITE_AUTH_REDIRECT_URL` | URL redirect fallback khi chạy ngoài browser | ❌ |
 
 > ⚠️ **Không bao giờ commit file `.env` lên GitHub!** File này đã được `.gitignore` bảo vệ.
 

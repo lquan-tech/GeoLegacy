@@ -65,6 +65,28 @@ function formatDate(value) {
   }).format(new Date(value));
 }
 
+function getIdentityEmail(identity) {
+  return (
+    identity?.email ||
+    identity?.identity_data?.email ||
+    identity?.identity_data?.email_verified ||
+    identity?.identity_data?.preferred_username ||
+    ""
+  );
+}
+
+function formatLinkedEmail(email) {
+  const [name, domain] = email.split("@");
+
+  if (!name || !domain) {
+    return email || "Google account connected";
+  }
+
+  const prefix = name.length <= 6 ? name : `${name.slice(0, 6)}...`;
+
+  return `${prefix}@${domain}`;
+}
+
 export default function ProfileModal() {
   const isOpen = useChronoStore((state) => state.isProfileModalOpen);
   const authUser = useChronoStore((state) => state.authUser);
@@ -332,6 +354,7 @@ export default function ProfileModal() {
                         const identity = findIdentity(provider.id);
                         const isConnected = Boolean(identity);
                         const isBusy = identityAction === provider.id;
+                        const linkedEmail = formatLinkedEmail(getIdentityEmail(identity));
                         const Icon = provider.Icon;
 
                         return (
@@ -346,7 +369,7 @@ export default function ProfileModal() {
                                   <p className="text-sm font-bold text-slate-900">{provider.label}</p>
                                   <p className="truncate text-xs text-slate-400">
                                     {isConnected
-                                      ? identity.email || identity.identity_data?.email || "Connected"
+                                      ? `Linked to ${linkedEmail}`
                                       : provider.enabled
                                         ? "Ready to link"
                                         : "Provider not configured"}

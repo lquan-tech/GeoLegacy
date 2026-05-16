@@ -723,14 +723,6 @@ or public.is_admin(auth.uid())
 
 Nếu policy bị thiếu hoặc sai, chạy lại `supabase/schema.sql`.
 
-## Ghi chú bảo mật
-
-- Không commit `.env` hoặc `.env.local`.
-- Supabase anon/publishable key có thể dùng ở frontend, nhưng service role key tuyệt đối không được đưa vào client.
-- Role admin phải được cấp ở database, không tin vào state phía frontend.
-- User thường không thể tự đổi `role` vì trigger trong database chặn việc self-escalation.
-- User thường không thể tự publish landmark vì trigger chặn thay đổi `status` nếu không phải admin.
-- RLS phải luôn bật cho các bảng cộng đồng.
 
 ## License
 

@@ -12,6 +12,10 @@ https://ge0legacy.vercel.app
 
 Lưu ý: domain là `ge0legacy` với số `0`, không phải chữ `o`.
 
+## Demo
+
+![GeoLegacy demo - 3D globe interface](artifacts/geolegacy-light.png)
+
 ## Mục lục
 
 - [Tính năng](#tính-năng)
